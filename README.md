@@ -22,18 +22,25 @@ app/
   archive/page.js            Lists all past stories
   archive/[date]/page.js      One past story, by date
   unsubscribe/page.js        Confirmation page after unsubscribing
+  login/page.js              "Email me a login link" form
+  account/page.js            Logged-in account page
   api/
     subscribe/route.js       Handles the signup form
     unsubscribe/route.js     Handles unsubscribe links from emails
+    login/route.js           Sends a magic login link
+    login/verify/route.js    Verifies a login link, starts a session
+    logout/route.js          Ends a session
     cron/daily-job/route.js  The daily pipeline (called by Vercel Cron)
 lib/
   db.js         All database queries live here
   feeds.js      Downloads headlines from the RSS feeds
   claude.js     Asks Claude to pick + summarize the top story
-  email.js      Sends the daily email via Resend
+  email.js      Sends the daily email + login links via Resend
+  auth.js       Login/session constants + getCurrentUser() helper
   dailyJob.js   Wires feeds -> claude -> db -> email together
 db/
-  schema.sql    Table definitions — run this once against your database
+  schema.sql              Fresh-install table definitions
+  migrations/001_accounts.sql   Upgrades an existing pre-accounts database
 scripts/
   run-job-once.js  Manually run the daily job from your terminal
 vercel.json    Tells Vercel when to run the daily job automatically
@@ -72,9 +79,12 @@ for example:
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-Finally, create the two database tables by running the contents of
-`db/schema.sql` once against your Neon database (paste it into Neon's SQL
-Editor in your project dashboard, or use `psql`).
+Finally, create the database tables:
+- **Brand-new database:** run the contents of `db/schema.sql` once (paste
+  it into Neon's SQL Editor and run).
+- **Already have a database from before accounts existed** (i.e. it still
+  has a `subscribers` table): run `db/migrations/001_accounts.sql` instead
+  — it upgrades your existing data in place.
 
 ## Testing each part
 
@@ -108,6 +118,13 @@ curl -H "Authorization: Bearer YOUR_CRON_SECRET" http://localhost:3000/api/cron/
 That sends a real email to every active subscriber. Click the unsubscribe
 link in the email to confirm that works too.
 
+**Accounts (magic-link login):** with `npm run dev` running, visit
+`/login` and enter an email. You'll get an email with a one-click login
+link (works once, expires in 15 minutes) that signs you in and takes you to
+`/account`, where you can see your subscription status and turn the daily
+email on/off. The header nav shows "Log in" or "My Account"/"Sign out"
+depending on whether you're currently signed in.
+
 ## Deploying
 
 1. Push this project to a GitHub repo.
@@ -136,10 +153,10 @@ number is minute, hour, day-of-month, month, day-of-week
 - **Change the email design:** edit `buildEmailHtml` in `lib/email.js`.
 - **Change the landing page copy:** edit `app/page.js`.
 
-## What's deliberately not in this MVP
+## What's deliberately not in this yet
 
-Per the project scope, this version is email-only, single-story-for-everyone,
-no accounts, and no billing. Those (native app + push notifications, user
-accounts, topic personalization, paid tiers) are planned as a later phase —
-the database schema and code structure here were kept simple on purpose so
-those can be added later without a rewrite.
+Accounts (magic-link login) are now in. Still to come, in order: topic
+personalization (pick a story per interest instead of one for everyone),
+payment/subscription tiers (via Stripe), and a native mobile app with push
+notifications. The `users` table and `getCurrentUser()` helper were built
+so those can hang off the existing account system without a rewrite.

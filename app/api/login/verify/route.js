@@ -1,0 +1,38 @@
+// app/api/login/verify/route.js
+//
+// This is what the link in the login email points to. If the token is
+// real and hasn't expired, we log the person in: clear the token (so the
+// link can't be used a second time), create a new session, and set the
+// session cookie on our way out the door.
+
+import { randomBytes } from "node:crypto";
+import { NextResponse } from "next/server";
+import { SESSION_COOKIE_NAME, SESSION_TTL_DAYS } from "@/lib/auth";
+import { getUserByValidLoginToken, clearLoginToken, createSession } from "@/lib/db";
+
+export async function GET(request) {
+  const token = new URL(request.url).searchParams.get("token");
+  const loginUrl = new URL("/login", request.url);
+
+  const user = token ? await getUserByValidLoginToken(token) : null;
+  if (!user) {
+    loginUrl.searchParams.set("error", "invalid-token");
+    return NextResponse.redirect(loginUrl, 303);
+  }
+
+  await clearLoginToken(user.id);
+
+  const sessionToken = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
+  await createSession(user.id, sessionToken, expiresAt);
+
+  const response = NextResponse.redirect(new URL("/account", request.url), 303);
+  response.cookies.set(SESSION_COOKIE_NAME, sessionToken, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    expires: expiresAt,
+  });
+  return response;
+}

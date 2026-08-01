@@ -1,9 +1,13 @@
 -- Daily AI Pulse — database schema
 --
--- How to use this file: run it ONCE against your Postgres database (e.g. Neon)
--- to create the two tables the app needs. You can do this by pasting the whole
--- file into Neon's SQL Editor (in your Neon project dashboard) and clicking Run.
--- You do not need to run this again unless you drop the tables.
+-- This file represents the schema for a brand-new install. If you're setting
+-- this project up for the first time, paste the whole file into Neon's SQL
+-- Editor and run it once.
+--
+-- If you already have a live database from before accounts existed (i.e. it
+-- still has a "subscribers" table), don't run this file — run the migration
+-- in db/migrations/001_accounts.sql instead, which upgrades your existing
+-- data in place without losing anything.
 
 -- One row per day: the single story Claude picked, already summarized.
 CREATE TABLE IF NOT EXISTS daily_stories (
@@ -16,11 +20,24 @@ CREATE TABLE IF NOT EXISTS daily_stories (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- One row per person who signed up for the email.
-CREATE TABLE IF NOT EXISTS subscribers (
+-- One row per person: both "gets the daily email" and "has an account" live
+-- on the same row, since they're usually (but not always) the same person.
+CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
-  subscribed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  active BOOLEAN NOT NULL DEFAULT true,      -- flipped to false when they unsubscribe
-  unsubscribe_token TEXT NOT NULL UNIQUE     -- random string used in their unsubscribe link
+  subscribed_at TIMESTAMPTZ NOT NULL DEFAULT now(),  -- also doubles as "account created at"
+  active BOOLEAN NOT NULL DEFAULT true,               -- true = receives the daily email
+  unsubscribe_token TEXT NOT NULL UNIQUE,             -- one-click unsubscribe, no login needed
+  login_token TEXT UNIQUE,               -- set while a magic link is pending; NULL otherwise
+  login_token_expires_at TIMESTAMPTZ     -- login_token stops working after this time
+);
+
+-- One row per signed-in browser/device. A user can have several at once
+-- (phone, laptop, etc), which is why this is a separate table from `users`
+-- rather than another column on it.
+CREATE TABLE IF NOT EXISTS sessions (
+  token TEXT PRIMARY KEY,           -- the value stored in the browser's cookie
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at TIMESTAMPTZ NOT NULL
 );
