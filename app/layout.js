@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,7 +18,13 @@ export const metadata = {
   description: "The one AI news story that actually matters today — for busy small business owners.",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  // Reading the session cookie here (via getCurrentUser) is what lets the
+  // nav below show "Log in" vs "My Account" — it also means this layout
+  // renders dynamically per-request rather than being cached as static
+  // HTML, same as the rest of the app's database-backed pages already do.
+  const user = await getCurrentUser();
+
   return (
     <html
       lang="en"
@@ -29,13 +36,29 @@ export default function RootLayout({ children }) {
             <Link href="/" className="text-lg font-semibold tracking-tight">
               Daily AI Pulse
             </Link>
-            <nav className="flex gap-6 text-sm font-medium text-zinc-600">
+            <nav className="flex items-center gap-6 text-sm font-medium text-zinc-600">
               <Link href="/today" className="hover:text-zinc-900">
                 Today&apos;s Story
               </Link>
               <Link href="/archive" className="hover:text-zinc-900">
                 Archive
               </Link>
+              {user ? (
+                <div className="flex items-center gap-4">
+                  <Link href="/account" className="hover:text-zinc-900">
+                    My Account
+                  </Link>
+                  <form method="POST" action="/api/logout">
+                    <button type="submit" className="hover:text-zinc-900">
+                      Sign out
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <Link href="/login" className="hover:text-zinc-900">
+                  Log in
+                </Link>
+              )}
             </nav>
           </div>
         </header>

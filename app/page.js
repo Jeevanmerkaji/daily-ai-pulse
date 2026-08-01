@@ -5,6 +5,8 @@
 // signup form below is a normal HTML <form> that POSTs to /api/subscribe;
 // no client-side JavaScript is needed for it to work.
 
+import Link from "next/link";
+
 const ERROR_MESSAGES = {
   "invalid-email": "That doesn't look like a valid email address — mind trying again?",
   "server-error": "Something went wrong on our end. Please try again in a moment.",
@@ -60,6 +62,12 @@ export default async function HomePage({ searchParams }) {
         )}
         <p className="mt-3 text-center text-xs text-zinc-400">
           Free. One email a day. Unsubscribe anytime with one click.
+        </p>
+        <p className="mt-1 text-center text-xs text-zinc-400">
+          Already a subscriber?{" "}
+          <Link href="/login" className="underline underline-offset-4 hover:text-zinc-600">
+            Log in
+          </Link>
         </p>
       </section>
 
