@@ -23,24 +23,27 @@ app/
   archive/[date]/page.js      One past story, by date
   unsubscribe/page.js        Confirmation page after unsubscribing
   login/page.js              "Email me a login link" form
-  account/page.js            Logged-in account page
+  account/page.js            Logged-in account page (subscription + topic)
   api/
     subscribe/route.js       Handles the signup form
     unsubscribe/route.js     Handles unsubscribe links from emails
     login/route.js           Sends a magic login link
     login/verify/route.js    Verifies a login link, starts a session
     logout/route.js          Ends a session
+    account/topic/route.js   Saves a logged-in user's topic choice
     cron/daily-job/route.js  The daily pipeline (called by Vercel Cron)
 lib/
   db.js         All database queries live here
   feeds.js      Downloads headlines from the RSS feeds
-  claude.js     Asks Claude to pick + summarize the top story
+  claude.js     Asks Claude to pick + summarize the top story (per topic)
   email.js      Sends the daily email + login links via Resend
   auth.js       Login/session constants + getCurrentUser() helper
-  dailyJob.js   Wires feeds -> claude -> db -> email together
+  topics.js     The fixed list of topics users can follow
+  dailyJob.js   Wires feeds -> claude -> db -> email together, per topic
 db/
-  schema.sql              Fresh-install table definitions
-  migrations/001_accounts.sql   Upgrades an existing pre-accounts database
+  schema.sql                    Fresh-install table definitions
+  migrations/001_accounts.sql   Upgrades a pre-accounts database
+  migrations/002_topics.sql     Upgrades a pre-topics database
 scripts/
   run-job-once.js  Manually run the daily job from your terminal
 vercel.json    Tells Vercel when to run the daily job automatically
@@ -82,9 +85,9 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 Finally, create the database tables:
 - **Brand-new database:** run the contents of `db/schema.sql` once (paste
   it into Neon's SQL Editor and run).
-- **Already have a database from before accounts existed** (i.e. it still
-  has a `subscribers` table): run `db/migrations/001_accounts.sql` instead
-  — it upgrades your existing data in place.
+- **Already have a database from an earlier version of this project:** run
+  whichever numbered migration(s) in `db/migrations/` you haven't applied
+  yet, in order (001, then 002) — each upgrades your existing data in place.
 
 ## Testing each part
 
@@ -121,9 +124,16 @@ link in the email to confirm that works too.
 **Accounts (magic-link login):** with `npm run dev` running, visit
 `/login` and enter an email. You'll get an email with a one-click login
 link (works once, expires in 15 minutes) that signs you in and takes you to
-`/account`, where you can see your subscription status and turn the daily
-email on/off. The header nav shows "Log in" or "My Account"/"Sign out"
-depending on whether you're currently signed in.
+`/account`, where you can see your subscription status, turn the daily
+email on/off, and pick a topic. The header nav shows "Log in" or "My
+Account"/"Sign out" depending on whether you're currently signed in.
+
+**Topics:** each user has one topic (default: "general" — today's single
+best story). Change it on `/account`. The daily job now runs once per topic
+(see `lib/topics.js` for the list), saving one story per topic per day and
+emailing each subscriber only the story for their own topic. The public
+`/today` and `/archive` pages always show the "general" story, regardless
+of how many topics exist behind the scenes.
 
 ## Deploying
 
@@ -148,15 +158,18 @@ number is minute, hour, day-of-month, month, day-of-week
 ## Making common changes
 
 - **Add or remove an RSS feed:** edit the `FEEDS` list in `lib/feeds.js`.
-- **Change how Claude picks/writes the story:** edit the prompt in
-  `lib/claude.js`.
+- **Add or remove a topic:** edit the `TOPICS` list in `lib/topics.js` —
+  the daily job, the account page, and the topic-update route all read
+  from this one file.
+- **Change how Claude picks/writes a story:** edit the prompts in
+  `lib/claude.js` (there's a separate branch for "general" vs. other topics).
 - **Change the email design:** edit `buildEmailHtml` in `lib/email.js`.
 - **Change the landing page copy:** edit `app/page.js`.
 
 ## What's deliberately not in this yet
 
-Accounts (magic-link login) are now in. Still to come, in order: topic
-personalization (pick a story per interest instead of one for everyone),
+Accounts and topic personalization are now in. Still to come, in order:
 payment/subscription tiers (via Stripe), and a native mobile app with push
-notifications. The `users` table and `getCurrentUser()` helper were built
-so those can hang off the existing account system without a rewrite.
+notifications. The `users` table, `getCurrentUser()` helper, and
+`lib/topics.js` were built so those can hang off the existing system
+without a rewrite.

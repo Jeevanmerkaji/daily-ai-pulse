@@ -21,10 +21,13 @@ export async function GET(request) {
   }
 
   try {
-    const { story, emailResult } = await runDailyJob({ sendEmails: true });
+    const { storiesByTopic, emailResult } = await runDailyJob({ sendEmails: true });
+    const stories = Object.fromEntries(
+      Object.entries(storiesByTopic).map(([topic, story]) => [topic, { date: story.date, headline: story.headline }])
+    );
     return NextResponse.json({
       ok: true,
-      story: { date: story.date, headline: story.headline },
+      stories,
       emailsSent: emailResult?.sent ?? 0,
       emailsFailed: emailResult?.failed ?? 0,
     });

@@ -19,10 +19,12 @@ async function main() {
   const sendEmails = process.argv.includes("--with-emails");
 
   console.log("Running the daily job" + (sendEmails ? " (will send emails)..." : " (no emails this run)..."));
-  const { story, emailResult } = await runDailyJob({ sendEmails });
+  const { storiesByTopic, emailResult } = await runDailyJob({ sendEmails });
 
-  console.log("\nDone! Saved story:\n");
-  console.log(story);
+  console.log("\nDone! Saved stories (one per topic):\n");
+  for (const [topic, story] of Object.entries(storiesByTopic)) {
+    console.log(`[${topic}] ${story.headline}`);
+  }
 
   if (emailResult) {
     console.log(`\nEmails sent: ${emailResult.sent}, failed: ${emailResult.failed}`);
