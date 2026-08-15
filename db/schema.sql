@@ -33,7 +33,10 @@ CREATE TABLE IF NOT EXISTS users (
   topic TEXT NOT NULL DEFAULT 'general',              -- which topic's story this user gets
   unsubscribe_token TEXT NOT NULL UNIQUE,             -- one-click unsubscribe, no login needed
   login_token TEXT UNIQUE,               -- set while a magic link is pending; NULL otherwise
-  login_token_expires_at TIMESTAMPTZ     -- login_token stops working after this time
+  login_token_expires_at TIMESTAMPTZ,    -- login_token stops working after this time
+  plan TEXT NOT NULL DEFAULT 'free',     -- 'free' or 'pro' — see lib/stripe.js
+  stripe_customer_id TEXT UNIQUE,        -- set once they start paying
+  stripe_subscription_id TEXT UNIQUE     -- set once they have a subscription
 );
 
 -- One row per signed-in browser/device. A user can have several at once
