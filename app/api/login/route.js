@@ -32,7 +32,7 @@ export async function POST(request) {
 
     await setLoginToken(email, { unsubscribeToken, loginToken, loginTokenExpiresAt });
 
-    const verifyUrl = new URL("/api/login/verify", request.url);
+    const verifyUrl = new URL("/login/verify", request.url);
     verifyUrl.searchParams.set("token", loginToken);
     await sendMagicLinkEmail(email, verifyUrl.toString());
   } catch (err) {
