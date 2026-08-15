@@ -67,7 +67,18 @@ export default async function RootLayout({ children }) {
 
         <footer className="border-t border-zinc-200 bg-white">
           <div className="mx-auto max-w-3xl px-6 py-6 text-center text-sm text-zinc-500">
-            Daily AI Pulse — one story a day, nothing you don&apos;t need.
+            <p>Daily AI Pulse — one story a day, nothing you don&apos;t need.</p>
+            <nav className="mt-2 flex justify-center gap-4">
+              <Link href="/privacy" className="hover:text-zinc-900">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="hover:text-zinc-900">
+                Terms of Service
+              </Link>
+              <Link href="/impressum" className="hover:text-zinc-900">
+                Impressum
+              </Link>
+            </nav>
           </div>
         </footer>
       </body>
