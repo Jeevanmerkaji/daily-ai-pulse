@@ -22,6 +22,8 @@ const TOPIC_ERROR_MESSAGES = {
 
 const BILLING_ERROR_MESSAGES = {
   "no-billing-account": "You don't have a billing account yet — upgrade to Pro first.",
+  "checkout-failed": "Couldn't start checkout. Please try again.",
+  "portal-failed": "Couldn't open the billing portal. Please try again.",
 };
 
 export default async function AccountPage({ searchParams }) {
