@@ -1,9 +1,7 @@
 // app/account/page.js
 //
 // A logged-in user's home base: who they are, whether they get the daily
-// email, and which topic it's about. The section below marked "Phase 2c"
-// is where plan/billing info will go once that's built, so this page
-// doesn't need restructuring later.
+// email, which topic it's about, and their plan.
 
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
@@ -22,6 +20,10 @@ const TOPIC_ERROR_MESSAGES = {
   "server-error": "Something went wrong saving that. Please try again.",
 };
 
+const BILLING_ERROR_MESSAGES = {
+  "no-billing-account": "You don't have a billing account yet — upgrade to Pro first.",
+};
+
 export default async function AccountPage({ searchParams }) {
   const user = await getCurrentUser();
   if (!user) {
@@ -31,7 +33,10 @@ export default async function AccountPage({ searchParams }) {
   const params = await searchParams;
   const topicUpdated = params?.["topic-updated"] === "1";
   const topicError = typeof params?.error === "string" ? TOPIC_ERROR_MESSAGES[params.error] : null;
+  const billingError = typeof params?.error === "string" ? BILLING_ERROR_MESSAGES[params.error] : null;
+  const upgradeResult = params?.upgrade; // "success" | "canceled" | undefined
   const currentTopic = user.topic || DEFAULT_TOPIC;
+  const isPro = user.plan === "pro";
 
   return (
     <div className="mx-auto max-w-lg px-6 py-16">
@@ -104,7 +109,46 @@ export default async function AccountPage({ searchParams }) {
         {topicError && <p className="mt-3 text-sm text-red-600">{topicError}</p>}
       </div>
 
-      {/* Phase 2c: plan/billing info will be added here. */}
+      <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+        <p className="text-sm text-zinc-500">Plan</p>
+        {isPro ? (
+          <div className="mt-1 flex items-center justify-between">
+            <span className="font-medium text-green-700">Pro — active</span>
+            <form method="POST" action="/api/billing/portal">
+              <button
+                type="submit"
+                className="rounded-lg border border-zinc-300 px-4 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
+              >
+                Manage billing
+              </button>
+            </form>
+          </div>
+        ) : (
+          <>
+            <p className="mt-1 font-medium text-zinc-900">Free</p>
+            <p className="mt-1 text-sm text-zinc-500">
+              Pro gets you every topic&apos;s story in one daily digest, plus full archive access to every topic.
+            </p>
+            <form method="POST" action="/api/billing/checkout" className="mt-3">
+              <button
+                type="submit"
+                className="rounded-lg bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-zinc-700"
+              >
+                Upgrade to Pro
+              </button>
+            </form>
+          </>
+        )}
+        {upgradeResult === "success" && (
+          <p className="mt-3 text-sm text-green-700">
+            Payment received — your Pro plan is being activated (this page will show it shortly).
+          </p>
+        )}
+        {upgradeResult === "canceled" && (
+          <p className="mt-3 text-sm text-zinc-500">Upgrade canceled — no charge was made.</p>
+        )}
+        {billingError && <p className="mt-3 text-sm text-red-600">{billingError}</p>}
+      </div>
 
       <form method="POST" action="/api/logout" className="mt-6">
         <button type="submit" className="text-sm font-medium text-zinc-600 underline underline-offset-4 hover:text-zinc-900">
