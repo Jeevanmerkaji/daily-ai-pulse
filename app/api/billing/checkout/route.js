@@ -11,6 +11,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getCurrentUser } from "@/lib/auth";
+import { captureError } from "@/lib/monitoring";
 
 export async function POST(request) {
   const user = await getCurrentUser();
@@ -40,6 +41,7 @@ export async function POST(request) {
     return NextResponse.redirect(session.url, 303);
   } catch (err) {
     console.error("Failed to create Stripe checkout session:", err);
+    captureError(err, { route: "billing/checkout", userId: user.id });
     return NextResponse.redirect(new URL("/account?error=checkout-failed", request.url), 303);
   }
 }

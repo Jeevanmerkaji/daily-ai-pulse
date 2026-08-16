@@ -15,6 +15,7 @@ const ERROR_MESSAGES = {
   "invalid-email": "That doesn't look like a valid email address — mind trying again?",
   "invalid-token": "That link is invalid or has expired. Request a new one below.",
   "server-error": "Something went wrong on our end. Please try again in a moment.",
+  "rate-limited": "Too many attempts — please wait a few minutes and try again.",
 };
 
 export default async function LoginPage({ searchParams }) {

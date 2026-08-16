@@ -10,6 +10,7 @@ import Link from "next/link";
 const ERROR_MESSAGES = {
   "invalid-email": "That doesn't look like a valid email address — mind trying again?",
   "server-error": "Something went wrong on our end. Please try again in a moment.",
+  "rate-limited": "Too many attempts — please wait a few minutes and try again.",
 };
 
 export default async function HomePage({ searchParams }) {

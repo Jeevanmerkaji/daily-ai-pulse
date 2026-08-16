@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { updateUserTopic } from "@/lib/db";
 import { isValidTopic } from "@/lib/topics";
+import { captureError } from "@/lib/monitoring";
 
 export async function POST(request) {
   const user = await getCurrentUser();
@@ -31,6 +32,7 @@ export async function POST(request) {
     await updateUserTopic(user.id, topic);
   } catch (err) {
     console.error("Failed to update topic:", err);
+    captureError(err, { route: "account/topic", userId: user.id });
     destinationUrl.searchParams.set("error", "server-error");
     return NextResponse.redirect(destinationUrl, 303);
   }

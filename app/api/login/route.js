@@ -11,6 +11,7 @@ import { NextResponse } from "next/server";
 import { EMAIL_REGEX, LOGIN_TOKEN_TTL_MINUTES } from "@/lib/auth";
 import { setLoginToken } from "@/lib/db";
 import { sendMagicLinkEmail } from "@/lib/email";
+import { captureError } from "@/lib/monitoring";
 
 export async function POST(request) {
   const formData = await request.formData();
@@ -37,6 +38,7 @@ export async function POST(request) {
     await sendMagicLinkEmail(email, verifyUrl.toString());
   } catch (err) {
     console.error("Failed to send login link:", err);
+    captureError(err, { route: "login" });
     loginUrl.searchParams.set("error", "server-error");
     return NextResponse.redirect(loginUrl, 303);
   }

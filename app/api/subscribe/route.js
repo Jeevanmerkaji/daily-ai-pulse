@@ -11,6 +11,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { EMAIL_REGEX } from "@/lib/auth";
 import { addSubscriber } from "@/lib/db";
+import { captureError } from "@/lib/monitoring";
 
 export async function POST(request) {
   const formData = await request.formData();
@@ -36,6 +37,7 @@ export async function POST(request) {
     await addSubscriber(email, unsubscribeToken);
   } catch (err) {
     console.error("Failed to add subscriber:", err);
+    captureError(err, { route: "subscribe" });
     destinationUrl.searchParams.set("error", "server-error");
     return NextResponse.redirect(destinationUrl, 303);
   }

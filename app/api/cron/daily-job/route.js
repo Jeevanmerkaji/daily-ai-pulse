@@ -13,6 +13,7 @@
 
 import { NextResponse } from "next/server";
 import { runDailyJob } from "@/lib/dailyJob";
+import { captureError } from "@/lib/monitoring";
 
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
@@ -33,6 +34,7 @@ export async function GET(request) {
     });
   } catch (err) {
     console.error("Daily job failed:", err);
+    captureError(err, { route: "cron/daily-job" });
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
 }
