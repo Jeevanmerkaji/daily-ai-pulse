@@ -3,7 +3,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy — Daily AI Pulse",
+  title: "Privacy Policy",
+  description: "What Daily AI Pulse collects, why, and how to exercise your GDPR rights.",
 };
 
 export default function PrivacyPage() {

@@ -3,7 +3,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms of Service — Daily AI Pulse",
+  title: "Terms of Service",
+  description: "The terms for using Daily AI Pulse and the Pro plan subscription.",
 };
 
 export default function TermsPage() {

@@ -14,6 +14,11 @@ import { TOPICS, DEFAULT_TOPIC, isValidTopic } from "@/lib/topics";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Archive",
+  description: "Every past Daily AI Pulse story, one per day.",
+};
+
 function formatShortDate(date) {
   return new Date(date).toLocaleDateString("en-US", {
     year: "numeric",

@@ -4,7 +4,8 @@
 // any commercial website operated from Germany.
 
 export const metadata = {
-  title: "Impressum — Daily AI Pulse",
+  title: "Impressum",
+  description: "Legal notice for Daily AI Pulse, pursuant to § 5 DDG.",
 };
 
 export default function ImpressumPage() {

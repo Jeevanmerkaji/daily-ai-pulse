@@ -13,9 +13,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const description = "The one AI news story that actually matters today — for busy small business owners.";
+
 export const metadata = {
-  title: "Daily AI Pulse",
-  description: "The one AI news story that actually matters today — for busy small business owners.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Daily AI Pulse",
+    template: "%s — Daily AI Pulse",
+  },
+  description,
+  openGraph: {
+    title: "Daily AI Pulse",
+    description,
+    url: "/",
+    siteName: "Daily AI Pulse",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Daily AI Pulse",
+    description,
+  },
 };
 
 export default async function RootLayout({ children }) {

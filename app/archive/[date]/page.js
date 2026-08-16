@@ -6,6 +6,7 @@
 // app/archive/page.js — see the comment there for why it's safe against
 // URL editing.
 
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getStoryByDate } from "@/lib/db";
@@ -15,16 +16,39 @@ import StoryCard from "@/app/components/StoryCard";
 
 export const dynamic = "force-dynamic";
 
-export default async function ArchiveStoryPage({ params, searchParams }) {
-  const { date } = await params;
+// Wrapped in cache() so generateMetadata and the page body share one fetch
+// per request instead of hitting the database twice.
+const getStory = cache(getStoryByDate);
+
+async function resolveEffectiveTopic(searchParams) {
   const query = await searchParams;
   const user = await getCurrentUser();
   const isPro = user?.plan === "pro";
-
   const requestedTopic = typeof query?.topic === "string" ? query.topic : null;
-  const effectiveTopic = isPro && isValidTopic(requestedTopic) ? requestedTopic : DEFAULT_TOPIC;
+  return isPro && isValidTopic(requestedTopic) ? requestedTopic : DEFAULT_TOPIC;
+}
 
-  const story = await getStoryByDate(date, effectiveTopic);
+export async function generateMetadata({ params, searchParams }) {
+  const { date } = await params;
+  const effectiveTopic = await resolveEffectiveTopic(searchParams);
+  const story = await getStory(date, effectiveTopic);
+  if (!story) {
+    return { title: "Story not found" };
+  }
+  const description = story.summary.length > 160 ? `${story.summary.slice(0, 157)}...` : story.summary;
+  return {
+    title: story.headline,
+    description,
+    openGraph: { title: story.headline, description },
+    twitter: { title: story.headline, description },
+  };
+}
+
+export default async function ArchiveStoryPage({ params, searchParams }) {
+  const { date } = await params;
+  const effectiveTopic = await resolveEffectiveTopic(searchParams);
+
+  const story = await getStory(date, effectiveTopic);
 
   if (!story) {
     notFound();

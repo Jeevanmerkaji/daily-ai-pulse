@@ -7,6 +7,10 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 
+export const metadata = {
+  title: "Log in",
+};
+
 const ERROR_MESSAGES = {
   "invalid-email": "That doesn't look like a valid email address — mind trying again?",
   "invalid-token": "That link is invalid or has expired. Request a new one below.",
