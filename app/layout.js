@@ -35,6 +35,9 @@ export const metadata = {
     title: "Daily AI Pulse",
     description,
   },
+  verification: {
+    google: "5KKpo7sHbcFzgkCM-Aw5_jYgbid21TurxDVffGNiIa0",
+  },
 };
 
 export default async function RootLayout({ children }) {
